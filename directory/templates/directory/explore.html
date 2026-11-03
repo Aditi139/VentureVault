@@ -1,0 +1,169 @@
+{% extends 'directory/base.html' %}
+{% load static %}
+
+{% block title %}Explore Videos | VentureVault Directory{% endblock %}
+
+{% block content %}
+<!-- HEADER -->
+<section class="py-4 bg-white border-bottom">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div>
+                <h1 class="h2 fw-bold text-dark mb-1">Explore Entrepreneur Stories</h1>
+                <p class="text-muted mb-0">Browse our complete directory of founder interviews, case studies, and business ideas.</p>
+            </div>
+            <div class="text-muted small">
+                Showing <strong>{{ page_obj.object_list|length }}</strong> of <strong>{{ total_results }}</strong> stories
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-4" style="background-color: var(--bg-page);">
+    <div class="container">
+        <!-- FILTER BAR -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-3 p-md-4">
+                <form method="GET" action="{% url 'explore' %}" class="row g-3 align-items-end">
+                    <!-- Search Input -->
+                    <div class="col-12 col-md-5">
+                        <label class="form-label small fw-bold text-muted mb-1">Search Keywords</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                            <input type="text" name="q" class="form-control border-start-0" placeholder="Search by video title, founder, or topic..." value="{{ search_query }}">
+                        </div>
+                    </div>
+
+                    <!-- Category Dropdown -->
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small fw-bold text-muted mb-1">Filter by Domain</label>
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>
+                                {{ cat.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Sort Dropdown -->
+                    <div class="col-12 col-md-3">
+                        <label class="form-label small fw-bold text-muted mb-1">Sort Stories</label>
+                        <select name="sort" class="form-select">
+                            <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+                            <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+                            <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+                            <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title (A-Z)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2 pt-2 border-top">
+                        <!-- Active Filters Badges -->
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            {% if search_query %}
+                            <span class="badge bg-light text-dark border py-2 px-3">
+                                Keyword: "{{ search_query }}"
+                                <a href="?category={{ selected_category }}&sort={{ sort_by }}" class="text-danger ms-1 text-decoration-none">&times;</a>
+                            </span>
+                            {% endif %}
+                            {% if selected_category %}
+                            <span class="badge bg-light text-dark border py-2 px-3">
+                                Domain: {{ selected_category }}
+                                <a href="?q={{ search_query }}&sort={{ sort_by }}" class="text-danger ms-1 text-decoration-none">&times;</a>
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2 ms-auto">
+                            {% if search_query or selected_category or sort_by != 'newest' %}
+                            <a href="{% url 'explore' %}" class="btn btn-sm btn-outline-secondary">Reset Filters</a>
+                            {% endif %}
+                            <button type="submit" class="btn btn-sm btn-vv-primary px-4">Apply Filters</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- VIDEO GRID -->
+        <div class="row g-4">
+            {% for video in page_obj %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="video-card">
+                    <div class="video-thumb-wrapper">
+                        <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="video-thumb-img" onerror="this.onerror=null; this.src='{% static 'directory/images/placeholder-video.svg' %}';">
+                        <span class="category-chip">{{ video.category.name }}</span>
+                        <span class="duration-badge">{{ video.duration }}</span>
+                        <a href="{% url 'video_detail' video.pk %}" class="card-play-icon" aria-label="Watch {{ video.title }}">
+                            <i class="fas fa-play"></i>
+                        </a>
+                    </div>
+                    <div class="video-card-body">
+                        <h3 class="video-card-title">
+                            <a href="{% url 'video_detail' video.pk %}">{{ video.title }}</a>
+                        </h3>
+                        <div class="entrepreneur-meta">
+                            <img src="{{ video.entrepreneur.avatar_url }}" alt="{{ video.entrepreneur.name }}" class="entrepreneur-avatar" onerror="this.onerror=null; this.src='{% static 'directory/images/avatar-founder.svg' %}';">
+                            <div>
+                                <p class="entrepreneur-name-text">{{ video.entrepreneur.name }}</p>
+                                <p class="entrepreneur-company-text">{{ video.entrepreneur.company_name }}</p>
+                            </div>
+                        </div>
+                        <p class="video-card-desc">{{ video.description }}</p>
+                        <div class="video-card-footer">
+                            <span class="text-muted small"><i class="far fa-clock me-1" style="color: var(--accent-orange);"></i> {{ video.duration }}</span>
+                            {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
+                            <button class="btn-card-save {% if video.pk in saved_video_ids %}saved{% endif %}" data-video-id="{{ video.pk }}" title="Save to Vault" aria-label="Save to Vault">
+                                <i class="{% if video.pk in saved_video_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <div class="p-5 bg-white rounded-4 shadow-sm border mx-auto" style="max-width: 580px;">
+                    <i class="fas fa-search fs-1 text-muted mb-3"></i>
+                    <h3 class="h4 fw-bold">No videos match your criteria</h3>
+                    <p class="text-muted">Try searching with broader keywords or clear your active category filters.</p>
+                    <a href="{% url 'explore' %}" class="btn btn-vv-primary mt-2">Reset All Filters</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- PAGINATION -->
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-5 d-flex justify-content-center" aria-label="Explore pages">
+            <ul class="pagination pagination-md">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&category={{ selected_category }}&sort={{ sort_by }}">Previous</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}&q={{ search_query }}&category={{ selected_category }}&sort={{ sort_by }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&category={{ selected_category }}&sort={{ sort_by }}">Next</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

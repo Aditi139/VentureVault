@@ -1,0 +1,157 @@
+{% extends 'directory/base.html' %}
+{% load static %}
+
+{% block title %}My Profile &amp; Dashboard | VentureVault{% endblock %}
+
+{% block content %}
+<!-- HEADER -->
+<section class="py-4 bg-white border-bottom">
+    <div class="container">
+        <div class="d-flex align-items-center gap-3">
+            <div class="brand-icon-box fs-3" style="width: 56px; height: 56px;">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div>
+                <h1 class="h2 fw-bold text-dark mb-0">Founder &amp; Learner Dashboard</h1>
+                <p class="text-muted mb-0">Welcome back, <strong>{{ user.username }}</strong> ({{ user.email }})</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5" style="background-color: var(--bg-page);">
+    <div class="container">
+        <div class="row g-4">
+            <!-- LEFT COLUMN: ACCOUNT DETAILS & PROFILE UPDATE -->
+            <div class="col-lg-4">
+                <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
+                    <h2 class="fw-bold fs-5 mb-3" style="color: var(--primary-navy);"><i class="fas fa-id-card me-2" style="color: var(--accent-orange);"></i> Account Details</h2>
+                    <div class="mb-3">
+                        <label class="text-muted small d-block">Username</label>
+                        <span class="fw-bold text-dark fs-6">{{ user.username }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small d-block">Email</label>
+                        <span class="fw-semibold text-dark">{{ user.email|default:"Not specified" }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small d-block">Member Since</label>
+                        <span class="fw-semibold text-dark">{{ user.date_joined|date:"F d, Y" }}</span>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h3 class="fw-bold fs-6 mb-3" style="color: var(--primary-navy);">Update Information</h3>
+                    <form method="POST" action="{% url 'profile' %}">
+                        {% csrf_token %}
+                        {% if p_form.errors %}
+                        <div class="alert alert-danger small py-2">
+                            {% for error in p_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                            {% for field in p_form %}{% for error in field.errors %}<div>{{ error }}</div>{% endfor %}{% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-2">
+                            <label class="form-label small text-muted mb-1">First Name</label>
+                            {{ p_form.first_name }}
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small text-muted mb-1">Last Name</label>
+                            {{ p_form.last_name }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted mb-1">Email</label>
+                            {{ p_form.email }}
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-vv-primary w-100">
+                            <i class="fas fa-save me-1"></i> Save Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: SAVED VIDEOS OR ADMIN PORTAL -->
+            <div class="col-lg-8">
+                {% if is_admin %}
+                <!-- ADMIN OVERVIEW CARD -->
+                <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="badge bg-warning text-dark p-2 fs-6 rounded-3">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div>
+                            <h2 class="fw-bold h5 mb-0" style="color: var(--primary-navy);">Administrator Privileges Active</h2>
+                            <p class="text-muted small mb-0">Content management &amp; directory administration</p>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-3">
+                        Personal video bookmarking is reserved for reader and learner accounts. As an administrator, you manage entrepreneur profiles, journey timelines, business milestones, distilled lessons, and video masterclasses directly through the Django Admin Panel.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="/admin/" target="_blank" class="btn btn-vv-primary btn-sm px-3">
+                            <i class="fas fa-tools me-1"></i> Open Django Admin Panel
+                        </a>
+                        <a href="/admin/directory/entrepreneur/add/" target="_blank" class="btn btn-vv-outline btn-sm px-3">
+                            <i class="fas fa-plus me-1"></i> Add New Entrepreneur
+                        </a>
+                        <a href="/admin/directory/video/add/" target="_blank" class="btn btn-vv-outline btn-sm px-3">
+                            <i class="fas fa-video me-1"></i> Add New Video
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <!-- SAVED VIDEOS (NORMAL USER VAULT) -->
+                <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <h2 class="fw-bold h5 mb-0" style="color: var(--primary-navy);"><i class="fas fa-bookmark me-2" style="color: var(--accent-orange);"></i> Saved to My Vault ({{ saved_videos|length }})</h2>
+                    </div>
+
+                    {% if saved_videos %}
+                    <div class="row g-3">
+                        {% for item in saved_videos %}
+                        <div class="col-12 col-md-6">
+                            <div class="video-card h-100">
+                                <div class="video-thumb-wrapper">
+                                    <img src="{{ item.video.thumbnail_url }}" alt="{{ item.video.title }}" class="video-thumb-img" onerror="this.onerror=null; this.src='{% static 'directory/images/placeholder-video.svg' %}';">
+                                    <span class="category-chip">{{ item.video.category.name }}</span>
+                                    <span class="duration-badge">{{ item.video.duration }}</span>
+                                    <a href="{% url 'video_detail' item.video.pk %}" class="card-play-icon" aria-label="Watch {{ item.video.title }}">
+                                        <i class="fas fa-play"></i>
+                                    </a>
+                                </div>
+                                <div class="video-card-body">
+                                    <h3 class="video-card-title fs-6">
+                                        <a href="{% url 'video_detail' item.video.pk %}">{{ item.video.title }}</a>
+                                    </h3>
+                                    <p class="entrepreneur-company-text mb-2">{{ item.video.entrepreneur.name }} • {{ item.video.entrepreneur.company_name }}</p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                                        <span class="text-muted small"><i class="far fa-clock me-1" style="color: var(--accent-orange);"></i> {{ item.video.duration }}</span>
+                                        <form method="POST" action="{% url 'remove_saved_video' item.video.pk %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{% url 'profile' %}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2 small">
+                                                <i class="fas fa-trash-alt me-1"></i> Remove
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted bg-light rounded-3 border">
+                        <i class="far fa-bookmark fs-1 text-muted mb-2"></i>
+                        <p class="mb-1 fw-semibold text-dark">Your personal vault is empty.</p>
+                        <p class="small mb-3">Browse our directory and click the bookmark button on any video to save it for quick review.</p>
+                        <a href="{% url 'explore' %}" class="btn btn-sm btn-vv-primary">Explore Directory</a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

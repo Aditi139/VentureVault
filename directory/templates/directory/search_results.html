@@ -1,0 +1,128 @@
+{% extends 'directory/base.html' %}
+{% load static %}
+
+{% block title %}Search: "{{ query }}" | VentureVault{% endblock %}
+
+{% block content %}
+<!-- HEADER -->
+<section class="py-4 bg-white border-bottom">
+    <div class="container">
+        <h1 class="h3 fw-bold text-dark mb-1">
+            Search Results for "<span style="color: var(--accent-orange);">{{ query }}</span>"
+        </h1>
+        <p class="text-muted mb-0">Found <strong>{{ total_count }}</strong> matching results across videos, founders, and categories.</p>
+    </div>
+</section>
+
+<section class="py-5" style="background-color: var(--bg-page);">
+    <div class="container">
+        {% if total_count == 0 %}
+        <div class="p-5 bg-white rounded-4 shadow-sm border text-center my-4 mx-auto" style="max-width: 600px;">
+            <i class="fas fa-search-minus fs-1 text-muted mb-3"></i>
+            <h2 class="h4 fw-bold">No results found for "{{ query }}"</h2>
+            <p class="text-muted small mb-4">
+                We couldn't find matching videos, entrepreneurs, or business domains. Try searching for topics like "Technology", "Clean Energy", "AI", or "FinTech".
+            </p>
+            <div class="d-flex justify-content-center gap-2">
+                <a href="{% url 'explore' %}" class="btn btn-vv-primary">Browse All Stories</a>
+                <a href="{% url 'entrepreneurs' %}" class="btn btn-vv-outline">Meet Founders</a>
+            </div>
+        </div>
+        {% else %}
+
+        <!-- VIDEOS SECTION -->
+        {% if videos %}
+        <div class="mb-5">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h2 class="h4 fw-bold mb-0" style="color: var(--primary-navy);"><i class="fas fa-video me-2" style="color: var(--accent-orange);"></i> Stories &amp; Videos ({{ videos|length }})</h2>
+            </div>
+            <div class="row g-4">
+                {% for video in videos %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="video-card">
+                        <div class="video-thumb-wrapper">
+                            <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="video-thumb-img" onerror="this.onerror=null; this.src='{% static 'directory/images/placeholder-video.svg' %}';">
+                            <span class="category-chip">{{ video.category.name }}</span>
+                            <span class="duration-badge">{{ video.duration }}</span>
+                            <a href="{% url 'video_detail' video.pk %}" class="card-play-icon" aria-label="Watch {{ video.title }}">
+                                <i class="fas fa-play"></i>
+                            </a>
+                        </div>
+                        <div class="video-card-body">
+                            <h3 class="video-card-title">
+                                <a href="{% url 'video_detail' video.pk %}">{{ video.title }}</a>
+                            </h3>
+                            <div class="entrepreneur-meta">
+                                <img src="{{ video.entrepreneur.avatar_url }}" alt="{{ video.entrepreneur.name }}" class="entrepreneur-avatar" onerror="this.onerror=null; this.src='{% static 'directory/images/avatar-founder.svg' %}';">
+                                <div>
+                                    <p class="entrepreneur-name-text">{{ video.entrepreneur.name }}</p>
+                                    <p class="entrepreneur-company-text">{{ video.entrepreneur.company_name }}</p>
+                                </div>
+                            </div>
+                            <p class="video-card-desc">{{ video.description }}</p>
+                            <div class="video-card-footer">
+                                <span class="text-muted small"><i class="far fa-clock me-1" style="color: var(--accent-orange);"></i> {{ video.duration }}</span>
+                                {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
+                                <button class="btn-card-save {% if video.pk in saved_video_ids %}saved{% endif %}" data-video-id="{{ video.pk }}" title="Save to Vault" aria-label="Save to Vault">
+                                    <i class="{% if video.pk in saved_video_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ENTREPRENEURS SECTION -->
+        {% if entrepreneurs %}
+        <div class="mb-5">
+            <h2 class="h4 fw-bold mb-3" style="color: var(--primary-navy);"><i class="fas fa-user-tie me-2" style="color: var(--accent-orange);"></i> Entrepreneurs &amp; Founders ({{ entrepreneurs|length }})</h2>
+            <div class="row g-4">
+                {% for entrepreneur in entrepreneurs %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="entrepreneur-card">
+                        <img src="{{ entrepreneur.avatar_url }}" alt="{{ entrepreneur.name }}" class="profile-card-img" onerror="this.onerror=null; this.src='{% static 'directory/images/avatar-founder.svg' %}';">
+                        <h3 class="entrepreneur-card-name">{{ entrepreneur.name }}</h3>
+                        <div class="entrepreneur-card-company">{{ entrepreneur.company_name }}</div>
+                        <span class="badge bg-light text-secondary border mb-2">{{ entrepreneur.industry }}</span>
+                        <p class="entrepreneur-card-bio">{{ entrepreneur.biography }}</p>
+                        <a href="{% url 'entrepreneur_detail' entrepreneur.pk %}" class="btn btn-vv-outline btn-sm w-100 mt-auto">
+                            View Profile &amp; Journey <i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- CATEGORIES SECTION -->
+        {% if categories %}
+        <div class="mb-4">
+            <h2 class="h4 fw-bold mb-3" style="color: var(--primary-navy);"><i class="fas fa-th-large me-2" style="color: var(--accent-orange);"></i> Business Domains ({{ categories|length }})</h2>
+            <div class="row g-4">
+                {% for cat in categories %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <a href="{% url 'category_videos' cat.slug %}" class="category-card">
+                        <div class="category-icon-wrapper">
+                            <i class="{{ cat.icon }}"></i>
+                        </div>
+                        <h3 class="category-card-title h5 mb-2">{{ cat.name }}</h3>
+                        <p class="category-card-desc">{{ cat.description }}</p>
+                        <div class="category-video-count mt-auto pt-2 border-top">
+                            <i class="fas fa-video me-1" style="color: var(--accent-orange);"></i> View Domain Videos
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="vvBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14213D" />
+      <stop offset="100%" stop-color="#0B132B" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#vvBg)"/>
+  <!-- Grid overlay -->
+  <g stroke="rgba(255,255,255,0.04)" stroke-width="1">
+    <line x1="0" y1="150" x2="800" y2="150"/>
+    <line x1="0" y1="300" x2="800" y2="300"/>
+    <line x1="266" y1="0" x2="266" y2="450"/>
+    <line x1="533" y1="0" x2="533" y2="450"/>
+  </g>
+  <!-- Center Play Badge -->
+  <circle cx="400" cy="210" r="44" fill="#FCA311"/>
+  <polygon points="392,192 418,210 392,228" fill="#14213D"/>
+  <!-- Label -->
+  <text x="400" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">VENTUREVAULT</text>
+  <text x="400" y="325" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" fill="#94A3B8" text-anchor="middle">Entrepreneur Stories &amp; Business Ideas</text>
+</svg>
+

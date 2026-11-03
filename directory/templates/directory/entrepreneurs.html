@@ -1,0 +1,117 @@
+{% extends 'directory/base.html' %}
+{% load static %}
+
+{% block title %}Entrepreneur Directory | VentureVault{% endblock %}
+
+{% block content %}
+<!-- HEADER -->
+<section class="py-4 bg-white border-bottom">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div>
+                <h1 class="h2 fw-bold text-dark mb-1">Entrepreneur Directory</h1>
+                <p class="text-muted mb-0">Discover founders, innovators, and leaders building high-impact enterprises worldwide.</p>
+            </div>
+            <div class="text-muted small">
+                Showing <strong>{{ page_obj.object_list|length }}</strong> of <strong>{{ total_results }}</strong> founders
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-4" style="background-color: var(--bg-page);">
+    <div class="container">
+        <!-- SEARCH & FILTER BAR -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-3 p-md-4">
+                <form method="GET" action="{% url 'entrepreneurs' %}" class="row g-3 align-items-end">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-muted mb-1">Search Founder / Startup</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                            <input type="text" name="q" class="form-control border-start-0" placeholder="Search by name, startup, or bio..." value="{{ search_query }}">
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small fw-bold text-muted mb-1">Industry Sector</label>
+                        <select name="industry" class="form-select">
+                            <option value="">All Industries</option>
+                            {% for ind in industries %}
+                            <option value="{{ ind }}" {% if selected_industry == ind %}selected{% endif %}>{{ ind }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-2 d-flex gap-2">
+                        {% if search_query or selected_industry %}
+                        <a href="{% url 'entrepreneurs' %}" class="btn btn-outline-secondary w-50">Reset</a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-vv-primary {% if search_query or selected_industry %}w-50{% else %}w-100{% endif %}">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ENTREPRENEUR CARDS GRID -->
+        <div class="row g-4">
+            {% for entrepreneur in page_obj %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="entrepreneur-card">
+                    <img src="{{ entrepreneur.avatar_url }}" alt="{{ entrepreneur.name }}" class="profile-card-img" onerror="this.onerror=null; this.src='{% static 'directory/images/avatar-founder.svg' %}';">
+                    <h3 class="entrepreneur-card-name">{{ entrepreneur.name }}</h3>
+                    <div class="entrepreneur-card-company">{{ entrepreneur.company_name }} <span class="text-muted fw-normal small">• {{ entrepreneur.role }}</span></div>
+                    <span class="badge bg-light text-secondary border mb-2">{{ entrepreneur.industry }}</span>
+                    <p class="entrepreneur-card-bio">{{ entrepreneur.biography }}</p>
+                    
+                    <div class="d-flex align-items-center justify-content-between w-100 pt-3 mt-auto border-top text-muted small">
+                        <span><i class="fas fa-video me-1" style="color: var(--accent-orange);"></i> {{ entrepreneur.video_count }} Videos</span>
+                        <span><i class="fas fa-map-marker-alt me-1"></i> {{ entrepreneur.founding_location|default:entrepreneur.location }}</span>
+                    </div>
+
+                    <a href="{% url 'entrepreneur_detail' entrepreneur.pk %}" class="btn btn-vv-outline btn-sm w-100 mt-3">
+                        View Profile &amp; Journey <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <div class="p-5 bg-white rounded-4 shadow-sm border mx-auto" style="max-width: 580px;">
+                    <i class="fas fa-users-slash fs-1 text-muted mb-3"></i>
+                    <h3 class="h4 fw-bold">No founders found</h3>
+                    <p class="text-muted">Try adjusting your search query or selecting a different industry filter.</p>
+                    <a href="{% url 'entrepreneurs' %}" class="btn btn-vv-primary mt-2">Reset Filters</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- PAGINATION -->
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-5 d-flex justify-content-center" aria-label="Founder pages">
+            <ul class="pagination pagination-md">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&industry={{ selected_industry }}">Previous</a></li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}&q={{ search_query }}&industry={{ selected_industry }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&industry={{ selected_industry }}">Next</a></li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

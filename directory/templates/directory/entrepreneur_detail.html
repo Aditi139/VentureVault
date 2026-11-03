@@ -1,0 +1,189 @@
+{% extends 'directory/base.html' %}
+{% load static %}
+
+{% block title %}{{ entrepreneur.name }} ({{ entrepreneur.company_name }}) | VentureVault Profile{% endblock %}
+
+{% block content %}
+<!-- HEADER HERO -->
+<section class="py-5 bg-white border-bottom">
+    <div class="container">
+        <div class="row align-items-center g-4">
+            <div class="col-md-3 text-center text-md-start">
+                <img src="{{ entrepreneur.avatar_url }}" alt="{{ entrepreneur.name }}" class="rounded-circle shadow-sm border border-3" width="160" height="160" style="object-fit: cover; border-color: var(--accent-orange) !important;" onerror="this.onerror=null; this.src='{% static 'directory/images/avatar-founder.svg' %}';">
+            </div>
+            <div class="col-md-9 text-center text-md-start">
+                <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-2 mb-2">
+                    <span class="badge px-3 py-2 fs-6" style="background-color: var(--primary-navy); color: #FFFFFF;">{{ entrepreneur.company_name }}</span>
+                    <span class="badge bg-light text-dark border px-3 py-2 fs-6">{{ entrepreneur.role }}</span>
+                    <span class="badge bg-light text-dark border px-3 py-2 fs-6">{{ entrepreneur.industry }}</span>
+                    <span class="badge bg-light text-muted border px-3 py-2 fs-6"><i class="fas fa-map-marker-alt me-1"></i> Founded: {{ entrepreneur.founding_location|default:entrepreneur.location }}</span>
+                    <span class="badge bg-light text-muted border px-3 py-2 fs-6"><i class="fas fa-calendar-alt me-1"></i> Est. {{ entrepreneur.founded_year }}</span>
+                </div>
+                <h1 class="display-6 fw-bold mb-2">{{ entrepreneur.name }}</h1>
+                <p class="text-muted fs-5 leading-relaxed mb-3" style="max-width: 780px;">{{ entrepreneur.biography }}</p>
+                
+                {% if entrepreneur.get_clean_website %}
+                <a href="{{ entrepreneur.get_clean_website }}" target="_blank" rel="noopener noreferrer" class="btn btn-vv-outline btn-sm">
+                    <i class="fas fa-external-link-alt me-1"></i> Visit Official Website
+                </a>
+                {% else %}
+                <span class="badge bg-light text-muted border px-3 py-2 fw-normal">
+                    <i class="fas fa-info-circle me-1"></i> Website information unavailable
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5" style="background-color: var(--bg-page);">
+    <div class="container">
+        <div class="row g-4">
+            <!-- MAIN CONTENT COLUMN -->
+            <div class="col-lg-8">
+                <!-- ENTREPRENEURIAL JOURNEY TIMELINE -->
+                <div class="bg-white p-4 p-md-5 rounded-4 shadow-sm mb-4 border">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h3 class="fw-bold mb-0 fs-4" style="color: var(--primary-navy);"><i class="fas fa-route me-2" style="color: var(--accent-orange);"></i> Entrepreneurial Journey</h3>
+                        <span class="badge bg-light text-muted border px-2 py-1 small">Fact-Checked Milestones</span>
+                    </div>
+                    <p class="text-muted small mb-4">Individually researched historical milestones and pivotal turning points in {{ entrepreneur.name }}'s career.</p>
+
+                    <div class="timeline-list">
+                        {% for milestone in entrepreneur.get_milestones %}
+                        <div class="timeline-item {% if forloop.last %}mb-0{% endif %}">
+                            <div class="timeline-marker"></div>
+                            <h4 class="timeline-title">{{ milestone.title }}</h4>
+                            <span class="timeline-subtitle">{{ milestone.subtitle }}</span>
+                            <p class="timeline-desc">{{ milestone.desc }}</p>
+                            {% if milestone.source %}
+                            <div class="timeline-source text-muted small mt-2 pt-1 border-top" style="font-size: 0.78rem;">
+                                <i class="fas fa-bookmark me-1" style="color: var(--accent-orange);"></i> <strong>Verified Source:</strong> {{ milestone.source }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <p class="text-muted mb-0">No timeline milestones currently recorded.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- VIDEOS BY THIS FOUNDER -->
+                <div class="bg-white p-4 p-md-5 rounded-4 shadow-sm mb-4 border">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <h3 class="fw-bold mb-0 fs-4" style="color: var(--primary-navy);"><i class="fas fa-video me-2" style="color: var(--accent-orange);"></i> Videos &amp; Masterclasses ({{ videos|length }})</h3>
+                    </div>
+
+                    <div class="row g-4">
+                        {% for video in videos %}
+                        <div class="col-12 col-md-6">
+                            <div class="video-card h-100">
+                                <div class="video-thumb-wrapper">
+                                    <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="video-thumb-img" onerror="this.onerror=null; this.src='{% static 'directory/images/placeholder-video.svg' %}';">
+                                    <span class="duration-badge">{{ video.duration }}</span>
+                                    <a href="{% url 'video_detail' video.pk %}" class="card-play-icon" aria-label="Watch {{ video.title }}">
+                                        <i class="fas fa-play"></i>
+                                    </a>
+                                </div>
+                                <div class="video-card-body">
+                                    <h4 class="video-card-title fs-6">
+                                        <a href="{% url 'video_detail' video.pk %}">{{ video.title }}</a>
+                                    </h4>
+                                    <p class="video-card-desc mb-2">{{ video.description }}</p>
+                                    <div class="video-card-footer">
+                                        <span class="text-muted small"><i class="far fa-clock me-1" style="color: var(--accent-orange);"></i> {{ video.duration }}</span>
+                                        {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
+                                        <button class="btn-card-save {% if video.pk in saved_video_ids %}saved{% endif %}" data-video-id="{{ video.pk }}" title="Save to Vault" aria-label="Save to Vault">
+                                            <i class="{% if video.pk in saved_video_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center py-4">
+                            <p class="text-muted mb-0">No videos uploaded for this entrepreneur yet.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- SIDEBAR COLUMN -->
+            <div class="col-lg-4">
+                <!-- FOUNDER STATS CARD -->
+                <div class="bg-white p-4 rounded-4 shadow-sm mb-4 border">
+                    <h3 class="fw-bold fs-5 mb-3" style="color: var(--primary-navy);"><i class="fas fa-id-badge me-2" style="color: var(--accent-orange);"></i> Quick Facts</h3>
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Enterprise</span>
+                            <strong class="text-dark">{{ entrepreneur.company_name }}</strong>
+                        </li>
+                        <li class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Role / Title</span>
+                            <strong class="text-dark text-end" style="max-width: 60%;">{{ entrepreneur.role }}</strong>
+                        </li>
+                        {% if entrepreneur.co_founders %}
+                        <li class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Co-Founders</span>
+                            <strong class="text-dark text-end" style="max-width: 60%;">{{ entrepreneur.co_founders }}</strong>
+                        </li>
+                        {% endif %}
+                        <li class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Industry Focus</span>
+                            <strong class="text-dark text-end">{{ entrepreneur.industry }}</strong>
+                        </li>
+                        <li class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Founding Year</span>
+                            <strong class="text-dark">{{ entrepreneur.founded_year }}</strong>
+                        </li>
+                        <li class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Founding Base</span>
+                            <strong class="text-dark text-end">{{ entrepreneur.founding_location|default:entrepreneur.location }}</strong>
+                        </li>
+                        {% if entrepreneur.headquarters %}
+                        <li class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Headquarters</span>
+                            <strong class="text-dark text-end">{{ entrepreneur.headquarters }}</strong>
+                        </li>
+                        {% endif %}
+                        {% if entrepreneur.key_products %}
+                        <li class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Key Offerings</span>
+                            <strong class="text-dark text-end" style="max-width: 60%;">{{ entrepreneur.key_products }}</strong>
+                        </li>
+                        {% endif %}
+                        <li class="py-2 d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Vault Library</span>
+                            <strong class="text-dark">{{ videos|length }} Videos</strong>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- KEY LESSONS -->
+                {% if lessons %}
+                <div class="bg-white p-4 rounded-4 shadow-sm border">
+                    <h3 class="fw-bold fs-5 mb-3" style="color: var(--primary-navy);"><i class="fas fa-lightbulb me-2" style="color: var(--accent-orange);"></i> Distilled Lessons</h3>
+                    <div class="d-flex flex-column gap-3">
+                        {% for lesson in lessons %}
+                        <div class="takeaway-card p-3 bg-light rounded-3 border">
+                            <p class="mb-1 text-dark" style="font-size: 0.92rem; line-height: 1.55;">
+                                <i class="{% if lesson.is_quote %}fas fa-quote-left{% else %}fas fa-check-circle{% endif %} me-2" style="color: var(--accent-orange);"></i>
+                                {% if lesson.is_quote %}<em>"{{ lesson.text }}"</em>{% else %}{{ lesson.text|default:lesson }}{% endif %}
+                            </p>
+                            {% if lesson.source %}
+                            <div class="text-muted small mt-2 pt-1 border-top" style="font-size: 0.78rem;">
+                                <i class="fas fa-bookmark me-1" style="color: var(--accent-orange);"></i> <strong>Source:</strong> {{ lesson.source }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends 'directory/base.html' %}
+{% load static %}
+
+{% block title %}{{ video.title }} | VentureVault{% endblock %}
+
+{% block content %}
+<!-- BREADCRUMBS -->
+<section class="py-3 bg-white border-bottom">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'explore' %}">Explore</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'category_videos' video.category.slug %}">{{ video.category.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ video.title|truncatechars:45 }}</li>
+            </ol>
+        </nav>
+    </div>
+</section>
+
+<!-- MAIN CONTENT -->
+<section class="py-4" style="background-color: var(--bg-page);">
+    <div class="container">
+        <div class="row g-4">
+            <!-- MAIN COLUMN: VIDEO PLAYER & STORY DETAILS -->
+            <div class="col-lg-8">
+                <!-- VIDEO PLAYER EMBED -->
+                <div class="video-player-container mb-3 position-relative">
+                    {% if youtube_id %}
+                    <iframe id="yt-player-iframe" src="{{ embed_url }}" title="{{ video.title }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                    <!-- Graceful Fallback Card (revealed if YouTube blocks embed) -->
+                    <div id="video-fallback-card" class="position-absolute top-0 start-0 w-100 h-100 bg-dark text-white d-none flex-column align-items-center justify-content-center p-4 text-center">
+                        <i class="fab fa-youtube text-danger display-4 mb-3"></i>
+                        <h4 class="fw-bold mb-2">Embedded Playback Restricted</h4>
+                        <p class="text-secondary small mb-3" style="max-width: 460px;">The video publisher has restricted third-party embedded playback. You can still watch the full masterclass directly on YouTube.</p>
+                        <a href="{{ video.video_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-vv-primary btn-sm px-4">
+                            <i class="fas fa-external-link-alt me-1"></i> Watch on YouTube
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="w-100 h-100 bg-dark text-white d-flex flex-column align-items-center justify-content-center p-4 text-center">
+                        <i class="fab fa-youtube text-danger display-4 mb-3"></i>
+                        <h4 class="fw-bold mb-2">External Video Link</h4>
+                        <p class="text-secondary small mb-3">Click below to open and watch the video directly on the source platform.</p>
+                        <a href="{{ video.video_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-vv-primary btn-sm px-4">
+                            <i class="fas fa-external-link-alt me-1"></i> Open Video
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- VIDEO HEADLINE & STATS CARD -->
+                <div class="bg-white p-4 rounded-4 shadow-sm mb-4 border">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                        <a href="{% url 'category_videos' video.category.slug %}" class="badge text-decoration-none px-3 py-2 fw-bold" style="background-color: var(--accent-orange-light); color: var(--accent-orange); border: 1px solid rgba(252, 163, 17, 0.3);">
+                            <i class="{{ video.category.icon }} me-1"></i> {{ video.category.name }}
+                        </a>
+                        <div class="text-muted small">
+                            <span><i class="far fa-clock me-1" style="color: var(--accent-orange);"></i> {{ video.duration }}</span>
+                        </div>
+                    </div>
+
+                    <h1 class="video-detail-title mb-3">{{ video.title }}</h1>
+
+                    <div class="d-flex flex-wrap align-items-center justify-content-between pt-3 border-top gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="{{ video.entrepreneur.avatar_url }}" alt="{{ video.entrepreneur.name }}" class="rounded-circle border" width="48" height="48" style="object-fit: cover;" onerror="this.onerror=null; this.src='{% static 'directory/images/avatar-founder.svg' %}';">
+                            <div>
+                                <h2 class="mb-0 fw-bold fs-6">
+                                    <a href="{% url 'entrepreneur_detail' video.entrepreneur.pk %}" class="text-dark text-decoration-none">{{ video.entrepreneur.name }}</a>
+                                </h2>
+                                <p class="text-muted small mb-0">{{ video.entrepreneur.company_name }} • {{ video.entrepreneur.industry }}</p>
+                            </div>
+                        </div>
+
+                        <!-- ACTION TOOLBAR -->
+                        <div class="d-flex align-items-center gap-2">
+                            {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
+                            <button id="btn-save-video" data-video-id="{{ video.pk }}" class="btn btn-sm {% if is_saved %}btn-vv-primary{% else %}btn-vv-outline{% endif %} px-3">
+                                <i class="{% if is_saved %}fas{% else %}far{% endif %} fa-bookmark me-1"></i> 
+                                <span class="save-btn-text">{% if is_saved %}Saved in Vault{% else %}Save to Vault{% endif %}</span>
+                            </button>
+                            {% elif not user.is_authenticated %}
+                            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-sm btn-vv-outline px-3" title="Log in to save video">
+                                <i class="far fa-bookmark me-1"></i> Save to Vault
+                            </a>
+                            {% endif %}
+
+                            <button id="btn-share-video" class="btn btn-sm btn-vv-outline px-3" title="Copy shareable link">
+                                <i class="fas fa-share-alt me-1"></i> Share
+                            </button>
+
+                            <a href="{{ video.video_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-vv-subtle px-3" title="Open YouTube in new tab">
+                                <i class="fab fa-youtube text-danger me-1"></i> YouTube
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STORY OVERVIEW SECTION -->
+                <div class="bg-white p-4 rounded-4 shadow-sm mb-4 border">
+                    <h3 class="fw-bold mb-3 fs-5" style="color: var(--primary-navy);"><i class="fas fa-align-left me-2" style="color: var(--accent-orange);"></i> Story Overview</h3>
+                    <p class="text-secondary leading-relaxed mb-0" style="white-space: pre-line; font-size: 0.95rem; line-height: 1.75;">{{ video.description }}</p>
+                </div>
+
+                <!-- KEY ENTREPRENEURIAL TAKEAWAYS -->
+                {% if takeaways %}
+                <div class="bg-white p-4 rounded-4 shadow-sm mb-4 border">
+                    <h3 class="fw-bold mb-3 fs-5" style="color: var(--primary-navy);"><i class="fas fa-lightbulb me-2" style="color: var(--accent-orange);"></i> Key Entrepreneurial Takeaways</h3>
+                    <div class="d-flex flex-column gap-2">
+                        {% for item in takeaways %}
+                        <div class="takeaway-card">
+                            <p><i class="fas fa-check-circle me-2" style="color: var(--accent-orange);"></i> {{ item }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- SIDEBAR COLUMN -->
+            <div class="col-lg-4">
+                <!-- FOUNDER PROFILE CARD -->
+                <div class="bg-white p-4 rounded-4 shadow-sm mb-4 border text-center">
+                    <span class="badge bg-light text-muted border mb-3">Featured Founder</span>
+                    <img src="{{ video.entrepreneur.avatar_url }}" alt="{{ video.entrepreneur.name }}" class="profile-card-img mx-auto" onerror="this.onerror=null; this.src='{% static 'directory/images/avatar-founder.svg' %}';">
+                    <h3 class="fw-bold h5 mb-1">{{ video.entrepreneur.name }}</h3>
+                    <p class="fw-semibold small mb-2" style="color: var(--accent-orange);">{{ video.entrepreneur.company_name }} • {{ video.entrepreneur.role }}</p>
+                    <p class="text-muted small mb-3 text-start">{{ video.entrepreneur.biography|truncatewords:28 }}</p>
+                    <div class="d-flex justify-content-between text-muted small border-top pt-2 mb-3">
+                        <span><i class="fas fa-map-marker-alt me-1"></i> {{ video.entrepreneur.founding_location|default:video.entrepreneur.location }}</span>
+                        <span><i class="fas fa-calendar-alt me-1"></i> Founded {{ video.entrepreneur.founded_year }}</span>
+                    </div>
+                    <a href="{% url 'entrepreneur_detail' video.entrepreneur.pk %}" class="btn btn-vv-outline btn-sm w-100">
+                        View Full Profile &amp; Timeline <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+
+                <!-- RELATED STORIES (YouTube Sidebar style) -->
+                <div class="bg-white p-4 rounded-4 shadow-sm border">
+                    <h3 class="fw-bold fs-6 mb-3" style="color: var(--primary-navy);"><i class="fas fa-film me-2" style="color: var(--accent-orange);"></i> Related Stories</h3>
+                    <div class="d-flex flex-column gap-3">
+                        {% for rel in related_videos %}
+                        <div class="d-flex gap-3 align-items-center">
+                            <div style="width: 105px; height: 65px; flex-shrink: 0;" class="position-relative rounded-2 overflow-hidden bg-dark">
+                                <img src="{{ rel.thumbnail_url }}" alt="{{ rel.title }}" class="w-100 h-100" style="object-fit: cover;" onerror="this.onerror=null; this.src='{% static 'directory/images/placeholder-video.svg' %}';">
+                                <span class="duration-badge py-0 px-1" style="font-size: 0.65rem; bottom: 4px; right: 4px;">{{ rel.duration }}</span>
+                            </div>
+                            <div class="overflow-hidden">
+                                <h4 class="fw-bold mb-1 small leading-tight">
+                                    <a href="{% url 'video_detail' rel.pk %}" class="text-dark text-decoration-none text-truncate d-block">{{ rel.title }}</a>
+                                </h4>
+                                <p class="text-muted small mb-0" style="font-size: 0.78rem;">{{ rel.entrepreneur.name }} • {{ rel.entrepreneur.company_name }}</p>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted small mb-0">No related videos available in this category.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if youtube_id %}
+<script>
+    // YouTube IFrame Player API: detect playback restriction and switch to graceful fallback
+    function onYouTubeIframeAPIReady() {
+        var iframe = document.getElementById('yt-player-iframe');
+        if (!iframe) return;
+
+        new YT.Player('yt-player-iframe', {
+            events: {
+                'onError': function(event) {
+                    var restrictedCodes = [100, 101, 150, 5, 2];
+                    if (restrictedCodes.indexOf(event.data) !== -1) {
+                        showVideoFallback();
+                    }
+                }
+            }
+        });
+    }
+
+    function showVideoFallback() {
+        var iframe = document.getElementById('yt-player-iframe');
+        var fallback = document.getElementById('video-fallback-card');
+        if (iframe) iframe.style.display = 'none';
+        if (fallback) {
+            fallback.classList.remove('d-none');
+            fallback.classList.add('d-flex');
+        }
+    }
+
+    // Load YouTube IFrame API asynchronously
+    (function() {
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    })();
+</script>
+{% endif %}
+{% endblock %}

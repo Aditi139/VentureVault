@@ -1,0 +1,309 @@
+{% extends 'directory/base.html' %}
+{% load static %}
+
+{% block title %}VentureVault | Online Video Directory for Entrepreneurs{% endblock %}
+
+{% block content %}
+<!-- HERO SECTION -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <div class="hero-tagline-badge">
+                    <i class="fas fa-bolt"></i> "Stories that inspire. Ideas that build."
+                </div>
+                <h1 class="hero-title mb-3">
+                    Discover the people and <span class="hero-title-accent">ideas shaping tomorrow.</span>
+                </h1>
+                <p class="hero-subtitle mb-4">
+                    The online video directory curated for aspiring founders, business students, and innovators. Watch real entrepreneurial journeys, unpack business models, and learn actionable startup lessons.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{% url 'explore' %}" class="btn btn-vv-primary btn-lg">
+                        <i class="fas fa-play-circle"></i> Explore Stories
+                    </a>
+                    <a href="{% url 'entrepreneurs' %}" class="btn btn-vv-light btn-lg">
+                        <i class="fas fa-users"></i> Meet Founders
+                    </a>
+                </div>
+
+                <!-- Live Metrics Strip -->
+                <div class="hero-stats-strip d-flex align-items-center gap-4">
+                    <div>
+                        <div class="hero-stat-value">{{ stats.total_videos }}+</div>
+                        <div class="hero-stat-label">Curated Videos</div>
+                    </div>
+                    <div class="vr bg-white opacity-25" style="height: 38px;"></div>
+                    <div>
+                        <div class="hero-stat-value">{{ stats.total_entrepreneurs }}+</div>
+                        <div class="hero-stat-label">Founder Profiles</div>
+                    </div>
+                    <div class="vr bg-white opacity-25" style="height: 38px;"></div>
+                    <div>
+                        <div class="hero-stat-value">{{ stats.total_categories }}</div>
+                        <div class="hero-stat-label">Business Domains</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="hero-card-preview">
+                    {% if featured_videos.0 %}
+                    <a href="{% url 'video_detail' featured_videos.0.pk %}" class="text-decoration-none">
+                        <div class="hero-video-frame mb-3">
+                            <img src="{{ featured_videos.0.thumbnail_url }}" alt="{{ featured_videos.0.title }}" onerror="this.onerror=null; this.src='{% static 'directory/images/placeholder-video.svg' %}';">
+                            <div class="play-button-overlay">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <span class="duration-badge">{{ featured_videos.0.duration }}</span>
+                            <span class="category-chip">{{ featured_videos.0.category.name }}</span>
+                        </div>
+                        <div class="px-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <img src="{{ featured_videos.0.entrepreneur.avatar_url }}" alt="{{ featured_videos.0.entrepreneur.name }}" class="rounded-circle border" width="30" height="30" style="object-fit:cover;" onerror="this.onerror=null; this.src='{% static 'directory/images/avatar-founder.svg' %}';">
+                                <span class="text-white small fw-bold">{{ featured_videos.0.entrepreneur.name }}</span>
+                                <span class="text-white-50 small">• {{ featured_videos.0.entrepreneur.company_name }}</span>
+                            </div>
+                            <h2 class="text-white fw-bold fs-6 mb-1 text-truncate">{{ featured_videos.0.title }}</h2>
+                            <p class="text-white-50 small mb-0 text-truncate">{{ featured_videos.0.description }}</p>
+                        </div>
+                    </a>
+                    {% else %}
+                    <div class="p-5 text-center text-white-50">
+                        <i class="fas fa-video-slash fs-1 mb-2"></i>
+                        <p class="mb-0">No featured videos currently listed.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- QUICK DOMAINS FILTER STRIP -->
+<section class="py-3 bg-white border-bottom">
+    <div class="container">
+        <div class="d-flex align-items-center gap-2 overflow-x-auto py-1" style="white-space: nowrap;">
+            <span class="small fw-bold text-muted text-uppercase me-2" style="font-size: 0.75rem; letter-spacing: 0.05em;">Explore Topics:</span>
+            <a href="{% url 'explore' %}" class="badge bg-dark text-white text-decoration-none px-3 py-2 rounded-pill">All Topics</a>
+            {% for cat in categories %}
+            <a href="{% url 'category_videos' cat.slug %}" class="badge bg-light text-secondary text-decoration-none border px-3 py-2 rounded-pill hover-accent">
+                <i class="{{ cat.icon }} me-1 text-warning"></i> {{ cat.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- FEATURED STORIES (Netflix Grid Style) -->
+<section class="py-5 bg-white">
+    <div class="container py-2">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4">
+            <div>
+                <span class="section-badge"><i class="fas fa-star"></i> Handpicked Masterclasses</span>
+                <h2 class="section-title">Featured Stories</h2>
+                <p class="section-subtitle mb-0">Deep dives into remarkable founder journeys, breakthrough innovations, and 0-to-1 execution.</p>
+            </div>
+            <a href="{% url 'explore' %}" class="btn btn-vv-outline mt-3 mt-md-0">
+                View Full Directory <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for video in featured_videos %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="video-card">
+                    <div class="video-thumb-wrapper">
+                        <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="video-thumb-img" onerror="this.onerror=null; this.src='{% static 'directory/images/placeholder-video.svg' %}';">
+                        <span class="category-chip">{{ video.category.name }}</span>
+                        <span class="duration-badge">{{ video.duration }}</span>
+                        <a href="{% url 'video_detail' video.pk %}" class="card-play-icon" aria-label="Watch {{ video.title }}">
+                            <i class="fas fa-play"></i>
+                        </a>
+                    </div>
+                    <div class="video-card-body">
+                        <h3 class="video-card-title">
+                            <a href="{% url 'video_detail' video.pk %}">{{ video.title }}</a>
+                        </h3>
+                        <div class="entrepreneur-meta">
+                            <img src="{{ video.entrepreneur.avatar_url }}" alt="{{ video.entrepreneur.name }}" class="entrepreneur-avatar" onerror="this.onerror=null; this.src='{% static 'directory/images/avatar-founder.svg' %}';">
+                            <div>
+                                <p class="entrepreneur-name-text">{{ video.entrepreneur.name }}</p>
+                                <p class="entrepreneur-company-text">{{ video.entrepreneur.company_name }}</p>
+                            </div>
+                        </div>
+                        <p class="video-card-desc">{{ video.description }}</p>
+                        <div class="video-card-footer">
+                            <span class="text-muted small"><i class="far fa-clock me-1" style="color: var(--accent-orange);"></i> {{ video.duration }}</span>
+                            {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
+                            <button class="btn-card-save {% if video.pk in saved_video_ids %}saved{% endif %}" data-video-id="{{ video.pk }}" title="Save to Vault" aria-label="Save to Vault">
+                                <i class="{% if video.pk in saved_video_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <p class="text-muted">No featured stories currently listed.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- TRENDING VIDEOS (YouTube Style Row) -->
+<section class="py-5" style="background-color: var(--bg-page);">
+    <div class="container py-2">
+        <div class="section-header">
+            <span class="section-badge"><i class="fas fa-fire text-danger"></i> Popular Right Now</span>
+            <h2 class="section-title">Trending Founder Insights</h2>
+            <p class="section-subtitle">Most viewed case studies, startup playbooks, and tactical business lessons.</p>
+        </div>
+
+        <div class="row g-4">
+            {% for video in trending_videos %}
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="video-card">
+                    <div class="video-thumb-wrapper">
+                        <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="video-thumb-img" onerror="this.onerror=null; this.src='{% static 'directory/images/placeholder-video.svg' %}';">
+                        <span class="duration-badge">{{ video.duration }}</span>
+                        <a href="{% url 'video_detail' video.pk %}" class="card-play-icon" aria-label="Watch {{ video.title }}">
+                            <i class="fas fa-play"></i>
+                        </a>
+                    </div>
+                    <div class="video-card-body">
+                        <h4 class="video-card-title fs-6">
+                            <a href="{% url 'video_detail' video.pk %}">{{ video.title }}</a>
+                        </h4>
+                        <div class="entrepreneur-meta">
+                            <img src="{{ video.entrepreneur.avatar_url }}" alt="{{ video.entrepreneur.name }}" class="entrepreneur-avatar" onerror="this.onerror=null; this.src='{% static 'directory/images/avatar-founder.svg' %}';">
+                            <div>
+                                <p class="entrepreneur-name-text">{{ video.entrepreneur.name }}</p>
+                                <p class="entrepreneur-company-text">{{ video.entrepreneur.company_name }}</p>
+                            </div>
+                        </div>
+                        <div class="video-card-footer mt-auto pt-2">
+                            <span class="badge bg-light text-dark border">{{ video.category.name }}</span>
+                            <span class="text-muted small"><i class="far fa-clock me-1" style="color: var(--accent-orange);"></i> {{ video.duration }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- EXPLORE BY CATEGORY -->
+<section class="py-5 bg-white">
+    <div class="container py-2">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4">
+            <div>
+                <span class="section-badge"><i class="fas fa-th-large"></i> Domains &amp; Industries</span>
+                <h2 class="section-title">Explore by Business Domain</h2>
+                <p class="section-subtitle mb-0">Discover stories tailored to specific industry sectors and strategic disciplines.</p>
+            </div>
+            <a href="{% url 'categories' %}" class="btn btn-vv-outline mt-3 mt-md-0">
+                All Categories <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for cat in categories %}
+            <div class="col-12 col-sm-6 col-lg-3">
+                <a href="{% url 'category_videos' cat.slug %}" class="category-card">
+                    <div class="category-icon-wrapper">
+                        <i class="{{ cat.icon }}"></i>
+                    </div>
+                    <h3 class="category-card-title">{{ cat.name }}</h3>
+                    <p class="category-card-desc">{{ cat.description }}</p>
+                    <div class="category-video-count">
+                        <i class="fas fa-video me-1" style="color: var(--accent-orange);"></i> {{ cat.video_count }} Videos
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ENTREPRENEUR SPOTLIGHT (Startups.com style) -->
+<section class="py-5" style="background-color: var(--bg-page);">
+    <div class="container py-2">
+        <div class="section-header text-center">
+            <span class="section-badge"><i class="fas fa-user-astronaut"></i> Founder Spotlight</span>
+            <h2 class="section-title">Meet Innovators &amp; Founders</h2>
+            <p class="section-subtitle mx-auto">Learn directly from builders who tackled real market friction and scaled solutions.</p>
+        </div>
+
+        <div class="row g-4">
+            {% for entrepreneur in spotlight_entrepreneurs %}
+            <div class="col-12 col-md-4">
+                <div class="entrepreneur-card">
+                    <img src="{{ entrepreneur.avatar_url }}" alt="{{ entrepreneur.name }}" class="profile-card-img" onerror="this.onerror=null; this.src='{% static 'directory/images/avatar-founder.svg' %}';">
+                    <h3 class="entrepreneur-card-name">{{ entrepreneur.name }}</h3>
+                    <div class="entrepreneur-card-company">{{ entrepreneur.company_name }} <span class="text-muted fw-normal small">• {{ entrepreneur.role }}</span></div>
+                    <span class="badge bg-light text-secondary border mb-2">{{ entrepreneur.industry }}</span>
+                    <p class="entrepreneur-card-bio">{{ entrepreneur.biography }}</p>
+                    <a href="{% url 'entrepreneur_detail' entrepreneur.pk %}" class="btn btn-vv-outline btn-sm w-100 mt-auto">
+                        View Profile &amp; Videos <i class="fas fa-chevron-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- VALUE PROPOSITION (Medium Editorial Style) -->
+<section class="py-5 bg-white border-top">
+    <div class="container py-2">
+        <div class="section-header text-center">
+            <span class="section-badge"><i class="fas fa-shield-alt"></i> Why VentureVault</span>
+            <h2 class="section-title">Built for the Next Generation of Builders</h2>
+            <p class="section-subtitle mx-auto">VentureVault bridges theoretical business knowledge with tactical, on-the-ground startup reality.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h4 class="feature-title">Real Founder Stories</h4>
+                    <p class="feature-desc">Authentic video interviews, keynote breakdowns, and candid discussions covering both triumphs and painful pivots.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h4 class="feature-title">Emerging Business Ideas</h4>
+                    <p class="feature-desc">Unpack market gaps, SaaS architectures, sustainable technologies, and business model innovations across tech and traditional sectors.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h4 class="feature-title">Annotated Key Lessons</h4>
+                    <p class="feature-desc">Every video is curated with bullet-point takeaways: fundraising strategy, customer validation, and hiring mechanics.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h4 class="feature-title">Global Perspectives</h4>
+                    <p class="feature-desc">Diverse case studies spanning clean energy, AI, FinTech, social ventures, and regional startup hubs worldwide.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

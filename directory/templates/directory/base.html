@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}VentureVault | Entrepreneur Stories & Business Ideas{% endblock %}</title>
+    <meta name="description" content="Discover inspiring founder journeys, startup case studies, and practical business lessons from real entrepreneurs worldwide.">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- VentureVault Custom Design System -->
+    <link rel="stylesheet" href="{% static 'directory/css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- STICKY NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-vv sticky-top">
+        <div class="container">
+            <!-- Brand Logo -->
+            <a class="navbar-brand navbar-brand-logo" href="{% url 'home' %}">
+                <span class="brand-icon-box">
+                    <i class="fas fa-vault"></i>
+                </span>
+                <span>Venture<span style="color: var(--accent-orange);">Vault</span></span>
+            </a>
+
+            <!-- Mobile Navbar Toggle -->
+            <button class="navbar-toggler text-white border-0" type="button" data-bs-toggle="collapse" data-bs-target="#vvNavbar" aria-controls="vvNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fas fa-bars fs-4"></i>
+            </button>
+
+            <!-- Navbar Links -->
+            <div class="collapse navbar-collapse" id="vvNavbar">
+                <ul class="navbar-nav me-auto ms-lg-4 mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-vv {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
+                            <i class="fas fa-home me-1 opacity-75"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-vv {% if request.resolver_match.url_name == 'explore' %}active{% endif %}" href="{% url 'explore' %}">
+                            <i class="fas fa-compass me-1 opacity-75"></i> Explore Stories
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-vv {% if request.resolver_match.url_name == 'entrepreneurs' or request.resolver_match.url_name == 'entrepreneur_detail' %}active{% endif %}" href="{% url 'entrepreneurs' %}">
+                            <i class="fas fa-user-tie me-1 opacity-75"></i> Entrepreneurs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-vv {% if request.resolver_match.url_name == 'categories' or request.resolver_match.url_name == 'category_videos' %}active{% endif %}" href="{% url 'categories' %}">
+                            <i class="fas fa-th-large me-1 opacity-75"></i> Categories
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-vv {% if request.resolver_match.url_name == 'about' %}active{% endif %}" href="{% url 'about' %}">
+                            <i class="fas fa-info-circle me-1 opacity-75"></i> About
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Global Search Form -->
+                <form class="d-flex nav-search-box me-lg-3 mb-2 mb-lg-0" action="{% url 'search' %}" method="GET">
+                    <i class="fas fa-search nav-search-icon"></i>
+                    <input class="form-control nav-search-input pe-3" type="search" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search stories, founders..." aria-label="Search">
+                </form>
+
+                <!-- Auth Buttons -->
+                <div class="d-flex align-items-center gap-2">
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff or user.is_superuser %}
+                        <a href="/admin/" target="_blank" class="btn btn-sm btn-outline-warning d-none d-md-inline-flex align-items-center gap-1">
+                            <i class="fas fa-tools"></i> Admin Panel
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'profile' %}" class="btn btn-sm btn-vv-light position-relative nav-profile-btn">
+                            <i class="fas fa-user-circle me-1"></i> {{ user.username }}
+                            {% if global_saved_count > 0 %}
+                            <span id="nav-saved-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark fw-bold">
+                                {{ global_saved_count }}
+                            </span>
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'logout' %}" class="btn btn-sm text-white-50 text-hover-white" title="Log Out">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-sm text-white px-3">Log In</a>
+                        <a href="{% url 'register' %}" class="btn btn-sm btn-vv-primary px-3">Get Started</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MESSAGES -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-3 shadow-sm border-0 d-flex align-items-center gap-2" role="alert">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle text-success{% elif message.tags == 'danger' or message.tags == 'error' %}fa-exclamation-triangle text-danger{% else %}fa-info-circle text-info{% endif %} fs-5"></i>
+            <div>{{ message }}</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- MAIN CONTENT -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer-vv">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 me-auto">
+                    <div class="footer-brand-title d-flex align-items-center gap-2">
+                        <span class="brand-icon-box">
+                            <i class="fas fa-vault"></i>
+                        </span>
+                        <span>Venture<span style="color: var(--accent-orange);">Vault</span></span>
+                    </div>
+                    <p class="small text-muted mb-3" style="max-width: 320px; color: #94A3B8 !important;">
+                        The curated online video directory empowering aspiring entrepreneurs, innovators, and students with real-world startup journeys and business models.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="https://github.com/Aditi139" target="_blank" rel="noopener noreferrer" class="text-secondary fs-5" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="https://www.linkedin.com/in/aditi139/" target="_blank" rel="noopener noreferrer" class="text-secondary fs-5" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                        <a href="mailto:aditikumari1397@gmail.com" class="text-secondary fs-5" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-6 col-md-3 col-lg-2">
+                    <h6 class="footer-heading">Platform</h6>
+                    <a href="{% url 'home' %}" class="footer-link">Home</a>
+                    <a href="{% url 'explore' %}" class="footer-link">Explore Stories</a>
+                    <a href="{% url 'entrepreneurs' %}" class="footer-link">Entrepreneurs</a>
+                    <a href="{% url 'categories' %}" class="footer-link">Categories</a>
+                </div>
+
+                <div class="col-6 col-md-3 col-lg-2">
+                    <h6 class="footer-heading">Categories</h6>
+                    {% for cat in all_categories|slice:":5" %}
+                    <a href="{% url 'category_videos' cat.slug %}" class="footer-link">{{ cat.name }}</a>
+                    {% empty %}
+                    <a href="{% url 'categories' %}" class="footer-link">All Domains</a>
+                    {% endfor %}
+                </div>
+
+                <div class="col-6 col-md-3 col-lg-2">
+                    <h6 class="footer-heading">Information</h6>
+                    <a href="{% url 'about' %}" class="footer-link">About Project</a>
+                    <a href="{% url 'contact' %}" class="footer-link">Contact Support</a>
+                    <a href="/admin/" target="_blank" class="footer-link">Admin Portal</a>
+                </div>
+            </div>
+
+            <div class="footer-bottom d-flex flex-column flex-md-row align-items-center justify-content-between">
+                <div>
+                    &copy; 2026 VentureVault – Entrepreneur Stories & Business Ideas. All rights reserved.
+                </div>
+                <div class="mt-2 mt-md-0 small" style="color: #94A3B8;">
+                    Built with Django 6.1, Bootstrap 5 &amp; SQLite
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom Interactive JS -->
+    <script src="{% static 'directory/js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

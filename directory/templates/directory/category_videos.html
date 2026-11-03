@@ -1,0 +1,128 @@
+{% extends 'directory/base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} Stories | VentureVault{% endblock %}
+
+{% block content %}
+<!-- BREADCRUMBS -->
+<section class="py-3 bg-white border-bottom">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'categories' %}">Categories</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ category.name }}</li>
+            </ol>
+        </nav>
+    </div>
+</section>
+
+<!-- CATEGORY HEADER -->
+<section class="py-4 bg-white border-bottom">
+    <div class="container">
+        <div class="d-flex align-items-center gap-3">
+            <div class="category-icon-wrapper mb-0" style="width: 56px; height: 56px; font-size: 1.5rem;">
+                <i class="{{ category.icon }}"></i>
+            </div>
+            <div>
+                <h1 class="h2 fw-bold text-dark mb-1">{{ category.name }}</h1>
+                <p class="text-muted mb-0">{{ category.description }}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-4" style="background-color: var(--bg-page);">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
+            <div class="text-muted small">
+                Showing <strong>{{ page_obj.object_list|length }}</strong> of <strong>{{ total_results }}</strong> stories in this category
+            </div>
+
+            <!-- Sort Form -->
+            <form method="GET" class="d-flex align-items-center gap-2">
+                <label class="small fw-bold text-muted mb-0">Sort:</label>
+                <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 160px;">
+                    <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+                    <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+                    <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+                </select>
+            </form>
+        </div>
+
+        <div class="row g-4">
+            {% for video in page_obj %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="video-card">
+                    <div class="video-thumb-wrapper">
+                        <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="video-thumb-img" onerror="this.onerror=null; this.src='{% static 'directory/images/placeholder-video.svg' %}';">
+                        <span class="category-chip">{{ video.category.name }}</span>
+                        <span class="duration-badge">{{ video.duration }}</span>
+                        <a href="{% url 'video_detail' video.pk %}" class="card-play-icon" aria-label="Watch {{ video.title }}">
+                            <i class="fas fa-play"></i>
+                        </a>
+                    </div>
+                    <div class="video-card-body">
+                        <h3 class="video-card-title">
+                            <a href="{% url 'video_detail' video.pk %}">{{ video.title }}</a>
+                        </h3>
+                        <div class="entrepreneur-meta">
+                            <img src="{{ video.entrepreneur.avatar_url }}" alt="{{ video.entrepreneur.name }}" class="entrepreneur-avatar" onerror="this.onerror=null; this.src='{% static 'directory/images/avatar-founder.svg' %}';">
+                            <div>
+                                <p class="entrepreneur-name-text">{{ video.entrepreneur.name }}</p>
+                                <p class="entrepreneur-company-text">{{ video.entrepreneur.company_name }}</p>
+                            </div>
+                        </div>
+                        <p class="video-card-desc">{{ video.description }}</p>
+                        <div class="video-card-footer">
+                            <span class="text-muted small"><i class="far fa-clock me-1" style="color: var(--accent-orange);"></i> {{ video.duration }}</span>
+                            {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
+                            <button class="btn-card-save {% if video.pk in saved_video_ids %}saved{% endif %}" data-video-id="{{ video.pk }}" title="Save to Vault" aria-label="Save to Vault">
+                                <i class="{% if video.pk in saved_video_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <div class="p-5 bg-white rounded-4 shadow-sm border mx-auto" style="max-width: 560px;">
+                    <i class="fas fa-film fs-1 text-muted mb-3"></i>
+                    <h3 class="h5 fw-bold">No stories listed in this category yet</h3>
+                    <p class="text-muted small">Check back soon as new verified case studies are added to our directory.</p>
+                    <a href="{% url 'explore' %}" class="btn btn-vv-primary mt-2">Explore All Stories</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- PAGINATION -->
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-5 d-flex justify-content-center" aria-label="Category pages">
+            <ul class="pagination pagination-md">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&sort={{ sort_by }}">Previous</a></li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}&sort={{ sort_by }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&sort={{ sort_by }}">Next</a></li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
