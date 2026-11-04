@@ -31,6 +31,12 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True').strip().lower() in ('true', '1', 
 _allowed = os.environ.get('DJANGO_ALLOWED_HOSTS', '*')
 ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()]
 
+_csrf_origins = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', 'https://*.onrender.com')
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_origins.split(',') if o.strip()]
+
+# Honor the 'X-Forwarded-Proto' header for request.is_secure() behind Render proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -44,6 +50,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -110,6 +117,19 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise production static file storage with compression & caching
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+# Don't crash on unhashed or missing static references in production
+WHITENOISE_MANIFEST_STRICT = False
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

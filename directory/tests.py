@@ -243,6 +243,36 @@ class ViewTests(TestCase):
         self.assertEqual(res_post.status_code, 302)
         self.assertTrue(ContactMessage.objects.filter(email='gagan@example.com').exists())
 
+    def test_whitenoise_serves_css_js_and_images(self):
+        """WhiteNoise serves CSS, JavaScript, and SVG static files with 200 OK."""
+        res_css = self.client.get('/static/directory/css/style.css')
+        self.assertEqual(res_css.status_code, 200)
+        self.assertIn('text/css', res_css.headers.get('Content-Type', ''))
+        css_body = b''.join(res_css.streaming_content)
+        self.assertIn(b'--primary-navy', css_body)
+
+        res_js = self.client.get('/static/directory/js/main.js')
+        self.assertEqual(res_js.status_code, 200)
+
+        res_svg = self.client.get('/static/directory/images/avatar-founder.svg')
+        self.assertEqual(res_svg.status_code, 200)
+
+        res_placeholder = self.client.get('/static/directory/images/placeholder-video.svg')
+        self.assertEqual(res_placeholder.status_code, 200)
+
+    def test_avatar_url_fallback_for_broken_paths(self):
+        """If profile_image has a non-existent static path, avatar_url falls back safely without returning 404."""
+        broken_ent = Entrepreneur.objects.create(
+            name="Nonexistent Founder",
+            company_name="Ghost Corp",
+            industry="Software",
+            profile_image="/static/directory/images/entrepreneurs/broken-image.jpg"
+        )
+        # Should not return the broken-image path, but the default vector fallback
+        self.assertEqual(broken_ent.avatar_url, "/static/directory/images/avatar-founder.svg")
+        res = self.client.get(broken_ent.avatar_url)
+        self.assertEqual(res.status_code, 200)
+
     def test_submit_story_route_completely_removed(self):
         """Public story submission endpoint must not exist (returns 404)."""
         res = self.client.get('/submit-story/')
@@ -556,6 +586,14 @@ class GlobalContentAccuracyAuditTests(TestCase):
             self.assertTrue(v.duration.strip())
             self.assertGreater(len(v.description), 40)
             self.assertGreater(len(v.get_takeaways_list()), 0)
+
+    def test_audit_all_26_entrepreneurs_have_accessible_static_images(self):
+        """Every single audited entrepreneur must have a valid avatar_url that returns 200 OK."""
+        for ent in Entrepreneur.objects.all():
+            img_url = ent.avatar_url
+            self.assertTrue(img_url.startswith('/static/'), f"Expected static path for {ent.name}, got {img_url}")
+            res = self.client.get(img_url)
+            self.assertEqual(res.status_code, 200, f"Image for {ent.name} at {img_url} returned {res.status_code}")
 
     def test_audit_no_demo_or_fictional_records(self):
         """Ensure fictional demo data from previous database versions is removed."""

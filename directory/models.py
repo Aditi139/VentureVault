@@ -61,25 +61,40 @@ class Entrepreneur(models.Model):
 
     @property
     def avatar_url(self):
+        import os
+        from django.conf import settings
+        
+        static_dir = os.path.join(settings.BASE_DIR, 'directory', 'static')
+        static_root = getattr(settings, 'STATIC_ROOT', None)
+        
+        def static_file_exists(rel_path):
+            if os.path.exists(os.path.join(static_dir, rel_path)):
+                return True
+            if static_root and os.path.exists(os.path.join(str(static_root), rel_path)):
+                return True
+            return False
+
         if self.profile_image and self.profile_image.strip():
             img = self.profile_image.strip()
-            # If it's a verified local static path or trusted non-stock URL
-            if not ("images.unsplash.com" in img or "placeholder" in img):
+            # If it's a verified local static path, check that it actually exists on disk
+            if img.startswith('/static/'):
+                rel = img[len('/static/'):]
+                if static_file_exists(rel):
+                    return img
+            elif not ("images.unsplash.com" in img or "placeholder" in img):
+                # Trusted external URL
                 return img
         
         name_slug = slugify(self.name)
-        import os
-        from django.conf import settings
-        static_dir = os.path.join(settings.BASE_DIR, 'directory', 'static')
         
         # 1. Local verified authentic portrait photo
         jpg_rel = f"directory/images/entrepreneurs/{name_slug}.jpg"
-        if os.path.exists(os.path.join(static_dir, jpg_rel)):
+        if static_file_exists(jpg_rel):
             return f"/static/{jpg_rel}"
         
         # 2. Neutral initials-based SVG avatar
         svg_rel = f"directory/images/entrepreneurs/{name_slug}.svg"
-        if os.path.exists(os.path.join(static_dir, svg_rel)):
+        if static_file_exists(svg_rel):
             return f"/static/{svg_rel}"
             
         # 3. Default vector fallback
