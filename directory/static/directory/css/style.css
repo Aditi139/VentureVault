@@ -156,23 +156,24 @@ a:hover {
 }
 
 .nav-search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #94A3B8;
-  font-size: 0.85rem;
-  pointer-events: none;
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94A3B8;
+    font-size: 0.85rem;
+    pointer-events: none;
+    z-index: 2;
 }
 
 .nav-search-input {
-  background-color: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  color: #FFFFFF !important;
-  border-radius: 24px;
-  padding: 0.45rem 1rem 0.45rem 2.3rem;
-  font-size: 0.88rem;
-  transition: all var(--transition-fast);
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #FFFFFF !important;
+    border-radius: 24px;
+    padding: 0.45rem 1rem 0.45rem 2.8rem !important;
+    font-size: 0.88rem;
+    transition: all var(--transition-fast);
 }
 
 .nav-search-input::placeholder {
